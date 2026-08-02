@@ -9,8 +9,12 @@ st.title(
 )
 
 
+
 df = get_student_data()
 
+if df is None:
+    st.warning("Upload your academic record first.")
+    st.stop()
 
 st.subheader(
     "Marks by Unit"
@@ -88,5 +92,5 @@ fig = px.line(
 
 st.plotly_chart(
     fig,
-    use_container_width=True
+    width="stretch"
 )

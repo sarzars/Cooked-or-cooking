@@ -21,25 +21,31 @@ uploaded = st.file_uploader(
 if uploaded:
 
     try:
-
-        df = load_uploaded_file(
-            uploaded
-        )
+        df = load_uploaded_file(uploaded)
 
         st.session_state["student_data"] = df
 
     except Exception as e:
+
         st.error(
             f"CSV Error: {e}"
         )
+
         st.stop()
+
+
 else:
 
-    df = None
+    df = get_student_data()
+
+
+if df is None:
 
     st.info(
         "Upload your academic record CSV to begin."
     )
+
+    st.stop()
 
 
 st.subheader(
@@ -49,7 +55,7 @@ st.subheader(
 
 st.dataframe(
     df,
-    use_container_width=True
+    width="stretch"
 )
 
 

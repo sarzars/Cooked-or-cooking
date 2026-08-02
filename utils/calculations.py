@@ -10,7 +10,9 @@ EIHWAM_WEIGHTS = {
     "Thesis": 8
 }
 
+
 EIHWAM_LABELS = {
+    0: "Level 1 units",
     2: "Level 2 units",
     3: "Level 3 units",
     4: "Level 4/5 units",

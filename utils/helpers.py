@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+import streamlit as st
 
 
 REQUIRED_COLUMNS = [
@@ -66,11 +67,8 @@ def load_uploaded_file(file):
 
 def get_student_data():
 
-    if DATA_PATH.exists():
-
-        return pd.read_csv(
-            DATA_PATH
-        )
+    if "student_data" in st.session_state:
+        return st.session_state["student_data"]
 
     return None
 
