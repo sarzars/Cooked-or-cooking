@@ -2,12 +2,10 @@ import pandas as pd
 
 
 EIHWAM_WEIGHTS = {
-    "Level 1": 0,
-    "Level 2": 2,
-    "Level 3": 3,
-    "Level 4": 4,
-    "Level 5": 4,
-    "Thesis": 8
+    2: "Level 2 units",
+    3: "Level 3 units",
+    4: "Level 4/5 units",
+    8: "Thesis units"
 }
 
 
