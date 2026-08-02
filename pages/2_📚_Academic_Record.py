@@ -19,23 +19,16 @@ uploaded = st.file_uploader(
 
 
 if uploaded:
-
-try:
-
-    df = load_uploaded_file(
-        uploaded
-    )
-
-except Exception as e:
-
-    st.error(
-        f"CSV Error: {e}"
-    )
-
-    st.stop()
-
+    try:
+        df = load_uploaded_file(
+            uploaded
+        )
+    except Exception as e:
+        st.error(
+            f"CSV Error: {e}"
+        )
+        st.stop()
 else:
-
     df = load_student_data()
 
     st.info(

@@ -1,5 +1,5 @@
 import pandas as pd
-
+from pathlib import Path
 
 REQUIRED_COLUMNS = [
     "Unit",
@@ -62,9 +62,8 @@ def load_uploaded_file(file):
 
 
 def load_student_data():
+    DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "sample_student.csv"
 
-    df = pd.read_csv(
-        "data/example_student.csv"
-    )
+    df = pd.read_csv(DATA_PATH)
 
-    return clean_data(df)
+    return df
