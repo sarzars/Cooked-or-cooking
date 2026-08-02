@@ -1,4 +1,4 @@
-data/*.csv
 __pycache__/
 *.pyc
-
+data/*.csv
+data/current_student.csv

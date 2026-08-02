@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from pathlib import Path
 
 
 REQUIRED_COLUMNS = [
@@ -12,6 +13,9 @@ REQUIRED_COLUMNS = [
     "Attempt",
     "Degree"
 ]
+
+
+DATA_FILE = Path("data/current_student.csv")
 
 
 def validate_data(df):
@@ -35,13 +39,8 @@ def clean_data(df):
 
     validate_data(df)
 
-    df["CP"] = pd.to_numeric(
-        df["CP"]
-    )
-
-    df["Mark"] = pd.to_numeric(
-        df["Mark"]
-    )
+    df["CP"] = pd.to_numeric(df["CP"])
+    df["Mark"] = pd.to_numeric(df["Mark"])
 
     return df
 
@@ -53,7 +52,14 @@ def load_uploaded_file(file):
 
     df = clean_data(df)
 
-    st.session_state["student_data"] = df
+    DATA_FILE.parent.mkdir(
+        exist_ok=True
+    )
+
+    df.to_csv(
+        DATA_FILE,
+        index=False
+    )
 
     return df
 
@@ -61,8 +67,11 @@ def load_uploaded_file(file):
 
 def get_student_data():
 
-    if "student_data" in st.session_state:
-        return st.session_state["student_data"]
+    if DATA_FILE.exists():
+
+        return pd.read_csv(
+            DATA_FILE
+        )
 
     return None
 
