@@ -8,6 +8,11 @@ from utils.calculations import (
     required_group_averages
 )
 
+from utils.calculations import (
+    calculate_projection,
+    required_group_averages,
+    EIHWAM_LABELS
+)
 
 st.title(
     "🎯 Target Planner"
@@ -109,7 +114,7 @@ if supports_eihwam(degree):
 
         st.write(
             f"""
-            **EIHWAM Weight: {weight}**
+            **{EIHWAM_LABELS.get(weight, "Unknown")}**
 
             Remaining units: {data['units']}
 

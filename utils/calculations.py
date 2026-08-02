@@ -2,12 +2,20 @@ import pandas as pd
 
 
 EIHWAM_WEIGHTS = {
+    "Level 1": 0,
+    "Level 2": 2,
+    "Level 3": 3,
+    "Level 4": 4,
+    "Level 5": 4,
+    "Thesis": 8
+}
+
+EIHWAM_LABELS = {
     2: "Level 2 units",
     3: "Level 3 units",
     4: "Level 4/5 units",
     8: "Thesis units"
 }
-
 
 def calculate_wam(df):
 
@@ -38,6 +46,7 @@ def calculate_eihwam(df):
         completed["Level"]
         .map(EIHWAM_WEIGHTS)
         .fillna(0)
+        .astype(float)
     )
 
     numerator = (
@@ -87,6 +96,7 @@ def calculate_projection(
         included["Level"]
         .map(EIHWAM_WEIGHTS)
         .fillna(0)
+        .astype(float)
     )
 
 
@@ -176,12 +186,14 @@ def required_overall_average(df, target, metric="EIHWAM"):
             completed["Level"]
             .map(EIHWAM_WEIGHTS)
             .fillna(0)
+            .astype(float)
         )
 
         remaining["Weight"] = (
             remaining["Level"]
             .map(EIHWAM_WEIGHTS)
             .fillna(0)
+            .astype(float)
         )
 
 
@@ -239,12 +251,14 @@ def required_group_averages(df, target_eihwam):
         completed["Level"]
         .map(EIHWAM_WEIGHTS)
         .fillna(0)
+        .astype(float)
     )
 
     remaining["Weight"] = (
         remaining["Level"]
         .map(EIHWAM_WEIGHTS)
         .fillna(0)
+        .astype(float)
     )
 
 
