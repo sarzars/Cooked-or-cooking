@@ -5,7 +5,7 @@ from utils.helpers import load_student_data
 from utils.settings import supports_eihwam
 from utils.calculations import (
     calculate_projection,
-    required_future_average
+    required_group_averages
 )
 
 
@@ -38,44 +38,6 @@ target_wam = st.number_input(
     75.0,
     0.5
 )
-
-
-required_wam = required_future_average(
-    df,
-    target_wam,
-    "WAM"
-)
-
-
-st.metric(
-    "Required Future WAM Average",
-    f"{required_wam:.2f}"
-)
-
-
-
-if supports_eihwam(degree):
-
-    target_eihwam = st.number_input(
-        "Target EIHWAM",
-        0.0,
-        100.0,
-        75.0,
-        0.5
-    )
-
-
-    required_eihwam = required_future_average(
-        df,
-        target_eihwam,
-        "EIHWAM"
-    )
-
-
-    st.metric(
-        "Required Future EIHWAM Average",
-        f"{required_eihwam:.2f}"
-    )
 
 
 st.divider()
@@ -118,7 +80,42 @@ st.metric(
 
 if supports_eihwam(degree):
 
-    st.metric(
-        "Projected EIHWAM",
-        f"{projection['EIHWAM']:.2f}"
+    target_eihwam = st.number_input(
+        "Target EIHWAM",
+        0.0,
+        100.0,
+        75.0,
+        0.5
     )
+
+
+    groups = required_group_averages(
+        df,
+        target_eihwam
+    )
+
+
+    st.subheader(
+        "Required averages by EIHWAM weighting"
+    )
+
+
+    st.caption(
+        "Assumes all other weighting groups achieve the target EIHWAM."
+    )
+
+
+    for weight, data in groups.items():
+
+        st.write(
+            f"""
+            **EIHWAM Weight: {weight}**
+
+            Remaining units: {data['units']}
+
+            Remaining credit points: {data['cp']}
+
+            Required average:
+            {data['required_average']:.2f}
+            """
+        )

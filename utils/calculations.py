@@ -125,7 +125,7 @@ def calculate_projection(
 
 
     return result
-def required_future_average(df, target, metric="EIHWAM"):
+def required_overall_average(df, target, metric="EIHWAM"):
     """
     Calculates the average needed across remaining units
     to hit a target.
@@ -221,3 +221,99 @@ def required_future_average(df, target, metric="EIHWAM"):
 
 
     return required
+
+def required_group_averages(df, target_eihwam):
+
+    completed = df[
+        df["Status"] == "Completed"
+    ].copy()
+
+    remaining = df[
+        df["Status"] == "Remaining"
+    ].copy()
+
+
+    if remaining.empty:
+        return {}
+
+
+    completed["Weight"] = (
+        completed["Level"]
+        .map(EIHWAM_WEIGHTS)
+        .fillna(0)
+    )
+
+    remaining["Weight"] = (
+        remaining["Level"]
+        .map(EIHWAM_WEIGHTS)
+        .fillna(0)
+    )
+
+
+    current_points = (
+        completed["Mark"]
+        *
+        completed["CP"]
+        *
+        completed["Weight"]
+    ).sum()
+
+
+    current_weight = (
+        completed["CP"]
+        *
+        completed["Weight"]
+    ).sum()
+
+
+    future_weight = (
+        remaining["CP"]
+        *
+        remaining["Weight"]
+    ).sum()
+
+
+    results = {}
+
+
+    for weight, group in remaining.groupby("Weight"):
+
+        group_weight = (
+            group["CP"]
+            *
+            weight
+        ).sum()
+
+
+        other_future_weight = (
+            future_weight
+            -
+            group_weight
+        )
+
+
+        required = (
+            target_eihwam
+            *
+            (
+                current_weight
+                +
+                future_weight
+            )
+            -
+            current_points
+            -
+            target_eihwam
+            *
+            other_future_weight
+        ) / group_weight
+
+
+        results[weight] = {
+            "units": len(group),
+            "cp": group["CP"].sum(),
+            "required_average": required
+        }
+
+
+    return results

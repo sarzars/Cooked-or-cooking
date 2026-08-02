@@ -15,7 +15,6 @@ from utils.calculations import (
     calculate_wam,
     calculate_eihwam,
     calculate_projection,
-    required_future_average
 )
 
 
