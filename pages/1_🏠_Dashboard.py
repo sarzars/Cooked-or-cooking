@@ -1,7 +1,7 @@
 import streamlit as st
 
 from utils.settings import supports_eihwam
-from utils.helpers import load_student_data
+from utils.helpers import get_student_data
 from utils.calculations import (
     calculate_wam,
     calculate_eihwam,
@@ -23,8 +23,13 @@ degree = st.sidebar.selectbox(
 )
 
 
-df = load_student_data()
+df = get_student_data()
 
+if df is None:
+    st.warning(
+        "Please upload your academic record first."
+    )
+    st.stop()
 
 current_wam = calculate_wam(df)
 

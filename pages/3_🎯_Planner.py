@@ -1,12 +1,7 @@
 import streamlit as st
-import pandas as pd
 
-from utils.helpers import load_student_data
+from utils.helpers import get_student_data
 from utils.settings import supports_eihwam
-from utils.calculations import (
-    calculate_projection,
-    required_group_averages
-)
 
 from utils.calculations import (
     calculate_projection,
@@ -28,8 +23,11 @@ degree = st.sidebar.selectbox(
 )
 
 
-df = load_student_data()
+df = get_student_data()
 
+if df is None:
+    st.warning("Please upload your academic record first.")
+    st.stop()
 
 st.subheader(
     "Set Target"
@@ -60,6 +58,9 @@ scenario = st.slider(
     80
 )
 
+if df is None:
+    st.warning("Please upload your academic record first.")
+    st.stop()
 
 future_df = df.copy()
 

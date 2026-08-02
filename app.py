@@ -8,9 +8,10 @@ from utils.settings import (
 )
 
 from utils.helpers import (
-    load_student_data,
+    get_student_data,
     load_uploaded_file
 )
+
 from utils.calculations import (
     calculate_wam,
     calculate_eihwam,

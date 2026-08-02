@@ -1,21 +1,26 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from utils.helpers import load_student_data
 
+from utils.helpers import get_student_data
 
 st.title(
     "📈 Academic Analytics"
 )
 
 
-df = load_student_data()
+df = get_student_data()
 
 
 st.subheader(
     "Marks by Unit"
 )
 
+df = get_student_data()
+
+if df is None:
+    st.warning("Please upload your academic record first.")
+    st.stop()
 
 chart_df = df[
     [
