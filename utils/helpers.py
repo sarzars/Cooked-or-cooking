@@ -1,5 +1,4 @@
 import pandas as pd
-import streamlit as st
 from pathlib import Path
 
 
@@ -15,7 +14,7 @@ REQUIRED_COLUMNS = [
 ]
 
 
-DATA_FILE = Path("data/current_student.csv")
+DATA_PATH = Path("data/current_student.csv")
 
 
 def validate_data(df):
@@ -52,12 +51,12 @@ def load_uploaded_file(file):
 
     df = clean_data(df)
 
-    DATA_FILE.parent.mkdir(
+    DATA_PATH.parent.mkdir(
         exist_ok=True
     )
 
     df.to_csv(
-        DATA_FILE,
+        DATA_PATH,
         index=False
     )
 
@@ -67,10 +66,10 @@ def load_uploaded_file(file):
 
 def get_student_data():
 
-    if DATA_FILE.exists():
+    if DATA_PATH.exists():
 
         return pd.read_csv(
-            DATA_FILE
+            DATA_PATH
         )
 
     return None
