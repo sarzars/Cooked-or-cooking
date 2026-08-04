@@ -132,3 +132,71 @@ def required_group_averages(df, target_eihwam):
         }
 
     return results
+
+
+def eihwam_target_scenarios(df, target):
+    """Create distinct unit-level mark plans that exactly meet an EIHWAM target."""
+    completed = _add_eihwam_weight(_completed_units(df))
+    remaining = _add_eihwam_weight(
+        df.loc[df["Status"] == "Remaining"].copy()
+    )
+
+    future_weight = remaining["EIHWAM CP"].sum()
+    if remaining.empty or future_weight == 0:
+        return {}
+
+    total_weight = completed["EIHWAM CP"].sum() + future_weight
+    completed_points = (completed["Mark"] * completed["EIHWAM CP"]).sum()
+    required_average = (target * total_weight - completed_points) / future_weight
+
+    if not 0 <= required_average <= 100:
+        return {}
+
+    balanced = df.copy()
+    balanced.loc[balanced["Status"] == "Remaining", "Projected Mark"] = (
+        required_average
+    )
+
+    higher_level_focus = balanced.copy()
+    impactful = remaining.loc[remaining["EIHWAM CP"] > 0].copy()
+    weighted_mean_level = (
+        (impactful["Weight"] * impactful["EIHWAM CP"]).sum()
+        / impactful["EIHWAM CP"].sum()
+    )
+    pattern = impactful["Weight"] - weighted_mean_level
+
+    positive_limits = [
+        (100 - required_average) / value for value in pattern if value > 0
+    ]
+    negative_limits = [
+        required_average / -value for value in pattern if value < 0
+    ]
+    maximum_scale = min([3, *positive_limits, *negative_limits])
+    higher_level_focus.loc[impactful.index, "Projected Mark"] = (
+        required_average + maximum_scale * pattern
+    )
+
+    return {
+        "Balanced target plan": balanced,
+        "Higher-level-unit focus": higher_level_focus,
+    }
+
+
+def eihwam_unit_impact(df):
+    """Show each remaining unit's EIHWAM leverage for a one-mark increase."""
+    weighted = _add_eihwam_weight(_projected_units(df))
+    total_weight = weighted["EIHWAM CP"].sum()
+    remaining = weighted.loc[weighted["Status"] == "Remaining"].copy()
+
+    if total_weight == 0:
+        return remaining.iloc[0:0]
+
+    impact = remaining[
+        ["Unit", "Semester", "Level", "CP", "Weight", "EIHWAM CP"]
+    ].copy()
+    impact["EIHWAM gain per +1 projected mark"] = (
+        impact["EIHWAM CP"] / total_weight
+    )
+    return impact.sort_values(
+        "EIHWAM gain per +1 projected mark", ascending=False
+    )
