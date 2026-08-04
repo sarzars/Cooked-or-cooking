@@ -16,30 +16,49 @@ from utils.helpers import (
     get_student_data,
     save_scenario,
 )
-from utils.settings import supports_eihwam
+from utils.settings import DEGREE_OPTIONS, supports_eihwam
+from utils.ui import apply_page_style, empty_state, page_header
 
 
-st.title("🎯 Target Planner")
-st.write("Model unit-level results, then save and compare realistic scenarios.")
+apply_page_style()
+page_header(
+    "Turn targets into a plan",
+    "Target planner",
+    "Set a goal, adjust realistic unit-level marks, and save the scenarios you want to compare.",
+)
 
-degree = st.sidebar.selectbox("Degree", ["Engineering", "Other"])
+degree = st.sidebar.selectbox("Degree type", DEGREE_OPTIONS, key="degree_type")
 record = get_student_data()
 
 if record is None:
-    st.warning("Please upload or create your academic record first.")
+    empty_state(
+        "Planning starts with your record",
+        "Add completed and remaining units first, then return here to model future marks.",
+    )
+    st.page_link(
+        "pages/2_📚_Academic_Record.py",
+        label="Add academic record",
+        icon="📚",
+    )
     st.stop()
 
 scenarios = get_scenarios()
-source_name = st.selectbox(
-    "Projection source",
-    ["Current record", *scenarios.keys()],
-)
-working = record.copy() if source_name == "Current record" else scenarios[source_name]
+with st.container(border=True):
+    st.markdown("### 1. Choose a starting point and goal")
+    source_name = st.selectbox(
+        "Projection source",
+        ["Current record", *scenarios.keys()],
+        help="Saved scenarios let you compare different plans without changing your record.",
+    )
+    working = record.copy() if source_name == "Current record" else scenarios[source_name]
 
-target_wam = st.number_input("Target WAM", 0.0, 100.0, 75.0, 0.5)
-target_eihwam = None
-if supports_eihwam(degree):
-    target_eihwam = st.number_input("Target EIHWAM", 0.0, 100.0, 75.0, 0.5)
+    target_col, eihwam_col = st.columns(2)
+    with target_col:
+        target_wam = st.number_input("Target WAM", 0.0, 100.0, 75.0, 0.5)
+    target_eihwam = None
+    if supports_eihwam(degree):
+        with eihwam_col:
+            target_eihwam = st.number_input("Target EIHWAM", 0.0, 100.0, 75.0, 0.5)
 
     suggested_plans = eihwam_target_scenarios(working, target_eihwam)
     if suggested_plans:
@@ -73,7 +92,8 @@ else:
     )
 
 st.divider()
-st.subheader("Unit-level projection")
+st.markdown("### 2. Fine-tune remaining units")
+st.caption("Only projected marks are editable here; completed results and unit details remain protected.")
 
 remaining_mask = working["Status"] == "Remaining"
 if remaining_mask.any():
@@ -107,7 +127,9 @@ projection = calculate_projection(
     working, include_eihwam=supports_eihwam(degree)
 )
 
-metric_col, save_col = st.columns(2)
+st.divider()
+st.markdown("### 3. Review and save")
+metric_col, save_col = st.columns([1.15, 0.85])
 with metric_col:
     st.metric("Projected WAM", f"{projection['WAM']:.2f}")
     if supports_eihwam(degree):
@@ -140,6 +162,7 @@ if supports_eihwam(degree):
     impact = eihwam_unit_impact(working)
     if not impact.empty:
         st.divider()
+        st.markdown("### Focus your effort")
         st.subheader("Which future units move EIHWAM most?")
         st.caption(
             "The final column shows the projected EIHWAM increase from one "
@@ -163,7 +186,7 @@ if source_name != "Current record":
 
 if scenarios:
     st.divider()
-    st.subheader("Scenario comparison")
+    st.markdown("### Compare saved scenarios")
     comparison_rows = []
     for name, candidate in {"Current record": record, **scenarios}.items():
         candidate_projection = calculate_projection(
@@ -185,7 +208,7 @@ if scenarios:
 if supports_eihwam(degree):
     groups = required_group_averages(working, target_eihwam)
     st.divider()
-    st.subheader("Required averages by EIHWAM weighting")
+    st.markdown("### EIHWAM requirements by weighting")
     st.caption("Assumes all other weighting groups achieve the target EIHWAM.")
 
     if not groups:
