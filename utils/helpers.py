@@ -22,6 +22,8 @@ def validate_data(df):
 
     if missing:
         raise ValueError(f"Missing columns: {missing}")
+    if df.empty:
+        raise ValueError("The uploaded CSV does not contain any units.")
 
 
 def clean_data(df):
