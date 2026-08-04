@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from utils.helpers import (
+from utils.ui import apply_page_style, empty_state, page_header\n\nfrom utils.helpers import (
     clean_data,
     empty_student_data,
     get_student_data,
@@ -33,7 +33,7 @@ if uploaded is not None:
 df = get_student_data()
 
 if df is None:
-    st.info("Upload a CSV or start a new record from scratch.")
+    empty_state(\n        "No academic record yet",\n        "Upload your CSV above or start a new record. Your data stays in this browser session.",\n    )
     if st.button("Create record manually", type="primary"):
         set_student_data(empty_student_data())
         st.rerun()
@@ -43,7 +43,7 @@ st.caption(
     "Your record is kept in this browser session and is not written to a shared server file."
 )
 
-st.subheader("Academic Record")
+st.markdown("### Your units")
 edited = st.data_editor(
     df,
     num_rows="dynamic",
@@ -78,13 +78,13 @@ with clear_col:
         st.rerun()
 
 st.divider()
-st.subheader("CSV Template")
+st.markdown("### Need a template?")
 
 template = pd.DataFrame(columns=[
     "Unit", "Mark", "Projected Mark", "Status"
 ])
 st.download_button(
-    "📥 Download Simple CSV Template",
+    "Download simple CSV template",
     template.to_csv(index=False),
     "academic_record_template.csv",
     "text/csv",
