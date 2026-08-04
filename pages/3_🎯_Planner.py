@@ -35,6 +35,10 @@ source_name = st.selectbox(
 working = record.copy() if source_name == "Current record" else scenarios[source_name]
 
 target_wam = st.number_input("Target WAM", 0.0, 100.0, 75.0, 0.5)
+target_eihwam = None
+if supports_eihwam(degree):
+    target_eihwam = st.number_input("Target EIHWAM", 0.0, 100.0, 75.0, 0.5)
+
 required_wam = required_overall_average(working, target_wam, metric="WAM")
 if required_wam is None:
     st.info("No credit-bearing remaining units are available for a WAM target.")
@@ -124,7 +128,7 @@ if scenarios:
     st.dataframe(pd.DataFrame(comparison_rows), hide_index=True, use_container_width=True)
 
 if supports_eihwam(degree):
-    groups = required_group_averages(working, target_wam)
+    groups = required_group_averages(working, target_eihwam)
     st.divider()
     st.subheader("Required averages by EIHWAM weighting")
     st.caption("Assumes all other weighting groups achieve the target EIHWAM.")
