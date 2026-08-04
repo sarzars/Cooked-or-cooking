@@ -109,12 +109,12 @@ projection = calculate_projection(
 
 metric_col, save_col = st.columns(2)
 with metric_col:
-    st.metric("Projected WAM", f"{projection["WAM"]:.2f}")
+    st.metric("Projected WAM", f"{projection['WAM']:.2f}")
     if supports_eihwam(degree):
         eihwam_gap = projection["EIHWAM"] - target_eihwam
         st.metric(
             "Projected EIHWAM",
-            f"{projection["EIHWAM"]:.2f}",
+            f"{projection['EIHWAM']:.2f}",
             f"{eihwam_gap:+.2f} vs target",
         )
         if eihwam_gap >= 0:
