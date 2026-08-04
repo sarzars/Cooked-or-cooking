@@ -1,96 +1,39 @@
-import streamlit as st
-import pandas as pd
 import plotly.express as px
+import streamlit as st
 
 from utils.helpers import get_student_data
 
-st.title(
-    "📈 Academic Analytics"
-)
 
-
+st.title("📈 Academic Analytics")
 
 df = get_student_data()
-
 if df is None:
     st.warning("Upload your academic record first.")
     st.stop()
 
-st.subheader(
-    "Marks by Unit"
-)
-
-df = get_student_data()
-
-if df is None:
-    st.warning("Please upload your academic record first.")
+completed = df.loc[df["Status"] == "Completed"].copy()
+if completed.empty:
+    st.info("Add completed units to view academic analytics.")
     st.stop()
 
-chart_df = df[
-    [
-        "Unit",
-        "Mark"
-    ]
-]
+st.caption("Analytics use actual marks from completed units only.")
 
-
-chart_df = chart_df.set_index(
-    "Unit"
-)
-
-
-st.bar_chart(
-    chart_df
-)
-
+st.subheader("Marks by Unit")
+st.bar_chart(completed.set_index("Unit")[["Mark"]])
 
 st.divider()
-
-
-st.subheader(
-    "Performance by Level"
-)
-
-
-level_average = (
-    df.groupby("Level")["Mark"]
-    .mean()
-)
-
-
-st.bar_chart(
-    level_average
-)
-
+st.subheader("Performance by Level")
+st.bar_chart(completed.groupby("Level")["Mark"].mean())
 
 st.divider()
-
-
-st.subheader(
-    "Attempts"
-)
-
-
-attempts = (
-    df.groupby("Attempt")
-    .size()
-)
-
-
-st.bar_chart(
-    attempts
-)
+st.subheader("Attempts")
+st.bar_chart(completed.groupby("Attempt").size())
 
 fig = px.line(
-    df,
+    completed,
     x="Semester",
     y="Mark",
     markers=True,
-    title="Academic Trend"
+    title="Academic Trend",
 )
-
-
-st.plotly_chart(
-    fig,
-    width="stretch"
-)
+st.plotly_chart(fig, use_container_width=True)
