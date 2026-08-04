@@ -39,7 +39,6 @@ if record is None:
         "pages/2_📚_Academic_Record.py",
         label="Add academic record",
         icon="📚",
-        type="primary",
     )
     st.stop()
 
