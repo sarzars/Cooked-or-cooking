@@ -1,49 +1,58 @@
 import streamlit as st
-import io
-import pandas as pd
 
-from utils.settings import (
-    DEGREE_OPTIONS,
-    supports_eihwam
-)
-
-from utils.helpers import (
-    get_student_data,
-    load_uploaded_file
-)
-
-from utils.calculations import (
-    calculate_wam,
-    calculate_eihwam,
-    calculate_projection,
-)
+from utils.ui import apply_page_style, feature_card, page_header
 
 
 st.set_page_config(
     page_title="To Cook Or Be Cooked",
-    page_icon="🍳",
-    layout="wide"
+    page_icon="🎓",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+apply_page_style()
+
+page_header(
+    "Academic planning, made practical",
+    "See your next best move.",
+    "Build a private record, understand your current standing, and test the marks that move your goals.",
 )
 
-
-st.title("🍳 To Cook Or Be Cooked")
-
-
-st.subheader(
-    "USYD Academic Planner"
+st.page_link(
+    "pages/2_📚_Academic_Record.py",
+    label="Add your academic record",
+    icon="📚",
+    type="primary",
 )
 
+st.markdown("### A simple path to clarity")
+first, second, third = st.columns(3)
+with first:
+    feature_card(
+        "1",
+        "Build your record",
+        "Upload the compact CSV template or enter units directly. Level and credit points are inferred when possible.",
+    )
+with second:
+    feature_card(
+        "2",
+        "Understand today",
+        "See current WAM and EIHWAM at a glance, with clear guidance when there is no record yet.",
+    )
+with third:
+    feature_card(
+        "3",
+        "Plan what matters",
+        "Model individual future results and save realistic scenarios before results season.",
+    )
 
-st.write(
-    """
-Welcome to To Cook Or Be Cooked.
-
-Use the pages on the left to:
-
-- View your WAM/EIHWAM dashboard
-- Upload academic records
-- Plan future marks
-- Analyse academic performance
-
-"""
-)
+st.divider()
+st.markdown("### Where to begin")
+steps, actions = st.columns([2, 1])
+with steps:
+    st.markdown(
+        "Start with your academic record. Once saved, the dashboard and target planner "
+        "will automatically use it for this browser session."
+    )
+with actions:
+    st.page_link("pages/1_🏠_Dashboard.py", label="Open dashboard", icon="📊")
+    st.page_link("pages/3_🎯_Planner.py", label="Plan a target", icon="🎯")
