@@ -17,13 +17,17 @@ REQUIRED_COLUMNS = [
 VALID_STATUSES = {"Completed", "Remaining"}
 
 
+def empty_student_data():
+    return pd.DataFrame(columns=REQUIRED_COLUMNS)
+
+
 def validate_data(df):
     missing = [column for column in REQUIRED_COLUMNS if column not in df.columns]
 
     if missing:
         raise ValueError(f"Missing columns: {missing}")
     if df.empty:
-        raise ValueError("The uploaded CSV does not contain any units.")
+        raise ValueError("Add at least one unit before saving.")
 
 
 def clean_data(df):
@@ -80,3 +84,21 @@ def set_student_data(df):
 def get_student_data():
     data = st.session_state.get("student_data")
     return data.copy(deep=True) if data is not None else None
+
+
+def save_scenario(name, df):
+    name = name.strip()
+    if not name:
+        raise ValueError("Give the scenario a name before saving.")
+
+    scenarios = st.session_state.setdefault("projection_scenarios", {})
+    scenarios[name] = df.copy(deep=True)
+
+
+def get_scenarios():
+    scenarios = st.session_state.get("projection_scenarios", {})
+    return {name: data.copy(deep=True) for name, data in scenarios.items()}
+
+
+def delete_scenario(name):
+    st.session_state.get("projection_scenarios", {}).pop(name, None)
