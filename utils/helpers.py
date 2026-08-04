@@ -1,39 +1,74 @@
+import re
+
 import pandas as pd
 import streamlit as st
 
 
 REQUIRED_COLUMNS = [
     "Unit",
-    "Semester",
-    "Level",
-    "CP",
     "Mark",
     "Projected Mark",
     "Status",
-    "Attempt",
-    "Degree",
+    "Level",
+    "CP",
 ]
 
+OPTIONAL_COLUMNS = ["Semester", "Attempt", "Degree"]
 VALID_STATUSES = {"Completed", "Remaining"}
 
 
+def infer_level(unit):
+    """Infer unit level from a USYD-style unit code."""
+    match = re.search(r"(\d)", str(unit))
+    if not match:
+        return 1
+    return int(match.group(1))
+
+
+def infer_cp(df):
+    """Default CP value. Most engineering units are 6 CP."""
+    return pd.Series([6.0] * len(df), index=df.index)
+
+
 def empty_student_data():
-    return pd.DataFrame(columns=REQUIRED_COLUMNS)
+    return pd.DataFrame(columns=REQUIRED_COLUMNS + OPTIONAL_COLUMNS)
+
+
+def prepare_data(df):
+    prepared = df.copy()
+
+    if "Status" not in prepared.columns:
+        prepared["Status"] = prepared.apply(
+            lambda row: "Completed" if pd.notna(row.get("Mark")) else "Remaining",
+            axis=1,
+        )
+
+    if "Level" not in prepared.columns:
+        prepared["Level"] = prepared["Unit"].apply(infer_level)
+
+    if "CP" not in prepared.columns:
+        prepared["CP"] = infer_cp(prepared)
+
+    for column in REQUIRED_COLUMNS + OPTIONAL_COLUMNS:
+        if column not in prepared.columns:
+            prepared[column] = None
+
+    return prepared
 
 
 def validate_data(df):
-    missing = [column for column in REQUIRED_COLUMNS if column not in df.columns]
-
-    if missing:
-        raise ValueError(f"Missing columns: {missing}")
     if df.empty:
         raise ValueError("Add at least one unit before saving.")
 
+    missing = [column for column in ["Unit"] if column not in df.columns]
+    if missing:
+        raise ValueError(f"Missing columns: {missing}")
+
 
 def clean_data(df):
-    validate_data(df)
+    cleaned = prepare_data(df)
+    validate_data(cleaned)
 
-    cleaned = df.copy()
     cleaned["Status"] = cleaned["Status"].astype(str).str.strip().str.title()
 
     invalid_statuses = sorted(set(cleaned["Status"]) - VALID_STATUSES)
@@ -44,6 +79,7 @@ def clean_data(df):
         )
 
     cleaned["CP"] = pd.to_numeric(cleaned["CP"], errors="coerce")
+    cleaned["Level"] = pd.to_numeric(cleaned["Level"], errors="coerce")
     cleaned["Mark"] = pd.to_numeric(cleaned["Mark"], errors="coerce")
     cleaned["Projected Mark"] = pd.to_numeric(
         cleaned["Projected Mark"], errors="coerce"
@@ -60,12 +96,11 @@ def clean_data(df):
     if cleaned.loc[remaining, "Projected Mark"].isna().any():
         raise ValueError("Remaining units must have a Projected Mark.")
 
-    marks = pd.concat(
-        [
-            cleaned.loc[completed, "Mark"],
-            cleaned.loc[remaining, "Projected Mark"],
-        ]
-    )
+    marks = pd.concat([
+        cleaned.loc[completed, "Mark"],
+        cleaned.loc[remaining, "Projected Mark"],
+    ])
+
     if not marks.between(0, 100).all():
         raise ValueError("Marks and projected marks must be between 0 and 100.")
 
@@ -77,7 +112,6 @@ def load_uploaded_file(file):
 
 
 def set_student_data(df):
-    """Store a private copy for this Streamlit browser session."""
     st.session_state["student_data"] = df.copy(deep=True)
 
 

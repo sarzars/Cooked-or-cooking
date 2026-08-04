@@ -11,7 +11,11 @@ from utils.helpers import (
 
 
 st.title("📚 Academic Record")
-st.write("Upload a transcript or build and maintain your record directly in the app.")
+st.write(
+    "Upload a simple CSV or build and maintain your record directly in the app. "
+    "Only Unit, Mark/Projected Mark, and Status are required. "
+    "Missing academic metadata is automatically inferred where possible."
+)
 
 uploaded = st.file_uploader("Upload academic record CSV", type=["csv"])
 
@@ -36,8 +40,7 @@ if df is None:
     st.stop()
 
 st.caption(
-    "Your record is kept in this browser session and is not written to a "
-    "shared server file."
+    "Your record is kept in this browser session and is not written to a shared server file."
 )
 
 st.subheader("Academic Record")
@@ -47,15 +50,10 @@ edited = st.data_editor(
     use_container_width=True,
     hide_index=True,
     column_config={
-        "CP": st.column_config.NumberColumn(
-            "CP", min_value=0.5, step=0.5, format="%.1f"
-        ),
-        "Mark": st.column_config.NumberColumn(
-            "Mark", min_value=0.0, max_value=100.0, step=0.5
-        ),
-        "Projected Mark": st.column_config.NumberColumn(
-            "Projected Mark", min_value=0.0, max_value=100.0, step=0.5
-        ),
+        "CP": st.column_config.NumberColumn("CP", min_value=0.5, step=0.5, format="%.1f"),
+        "Level": st.column_config.NumberColumn("Level", min_value=1, max_value=5, step=1),
+        "Mark": st.column_config.NumberColumn("Mark", min_value=0.0, max_value=100.0, step=0.5),
+        "Projected Mark": st.column_config.NumberColumn("Projected Mark", min_value=0.0, max_value=100.0, step=0.5),
         "Status": st.column_config.SelectboxColumn(
             "Status", options=["Completed", "Remaining"], required=True
         ),
@@ -83,11 +81,10 @@ st.divider()
 st.subheader("CSV Template")
 
 template = pd.DataFrame(columns=[
-    "Unit", "Semester", "Level", "CP", "Mark", "Projected Mark",
-    "Status", "Attempt", "Degree",
+    "Unit", "Mark", "Projected Mark", "Status"
 ])
 st.download_button(
-    "📥 Download CSV Template",
+    "📥 Download Simple CSV Template",
     template.to_csv(index=False),
     "academic_record_template.csv",
     "text/csv",
