@@ -1,56 +1,91 @@
 import pandas as pd
 import streamlit as st
 
-from utils.helpers import get_student_data, load_uploaded_file, set_student_data
+from utils.helpers import (
+    clean_data,
+    empty_student_data,
+    get_student_data,
+    load_uploaded_file,
+    set_student_data,
+)
 
 
 st.title("📚 Academic Record")
+st.write("Upload a transcript or build and maintain your record directly in the app.")
 
 uploaded = st.file_uploader("Upload academic record CSV", type=["csv"])
 
 if uploaded is not None:
-    try:
-        df = load_uploaded_file(uploaded)
-        set_student_data(df)
-        st.success("Academic record loaded for this browser session.")
-    except (ValueError, pd.errors.ParserError) as error:
-        st.error(f"CSV Error: {error}")
-        st.stop()
-else:
-    df = get_student_data()
+    upload_id = f"{uploaded.name}:{uploaded.size}"
+    if st.session_state.get("uploaded_record_id") != upload_id:
+        try:
+            set_student_data(load_uploaded_file(uploaded))
+            st.session_state["uploaded_record_id"] = upload_id
+            st.success("Academic record loaded.")
+        except (ValueError, pd.errors.ParserError) as error:
+            st.error(f"CSV Error: {error}")
+            st.stop()
+
+df = get_student_data()
 
 if df is None:
-    st.info("Upload your academic record CSV to begin.")
+    st.info("Upload a CSV or start a new record from scratch.")
+    if st.button("Create record manually", type="primary"):
+        set_student_data(empty_student_data())
+        st.rerun()
     st.stop()
 
 st.caption(
     "Your record is kept in this browser session and is not written to a "
     "shared server file."
 )
-st.subheader("Academic History")
-st.dataframe(df, use_container_width=True)
 
-if st.button("Clear uploaded record"):
-    st.session_state.pop("student_data", None)
-    st.rerun()
-
-st.divider()
-st.subheader("Download Template")
-
-template = pd.DataFrame(
-    columns=[
-        "Unit",
-        "Semester",
-        "Level",
-        "CP",
-        "Mark",
-        "Projected Mark",
-        "Status",
-        "Attempt",
-        "Degree",
-    ]
+st.subheader("Academic Record")
+edited = st.data_editor(
+    df,
+    num_rows="dynamic",
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "CP": st.column_config.NumberColumn(
+            "CP", min_value=0.5, step=0.5, format="%.1f"
+        ),
+        "Mark": st.column_config.NumberColumn(
+            "Mark", min_value=0.0, max_value=100.0, step=0.5
+        ),
+        "Projected Mark": st.column_config.NumberColumn(
+            "Projected Mark", min_value=0.0, max_value=100.0, step=0.5
+        ),
+        "Status": st.column_config.SelectboxColumn(
+            "Status", options=["Completed", "Remaining"], required=True
+        ),
+    },
+    key="academic_record_editor",
 )
 
+save_col, clear_col = st.columns(2)
+with save_col:
+    if st.button("Save record changes", type="primary", use_container_width=True):
+        try:
+            set_student_data(clean_data(edited))
+            st.success("Record saved for this browser session.")
+        except ValueError as error:
+            st.error(f"Cannot save record: {error}")
+
+with clear_col:
+    if st.button("Clear record", use_container_width=True):
+        st.session_state.pop("student_data", None)
+        st.session_state.pop("uploaded_record_id", None)
+        st.session_state.pop("projection_scenarios", None)
+        st.rerun()
+
+st.divider()
+st.subheader("CSV Template")
+
+template = pd.DataFrame(columns=[
+    "Unit", "Semester", "Level", "CP", "Mark", "Projected Mark",
+    "Status", "Attempt", "Degree",
+])
 st.download_button(
     "📥 Download CSV Template",
     template.to_csv(index=False),
