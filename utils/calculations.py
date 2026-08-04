@@ -1,19 +1,39 @@
-EIHWAM_WEIGHTS = {
-    "Level 1": 0,
-    "Level 2": 2,
-    "Level 3": 3,
-    "Level 4": 4,
-    "Level 5": 4,
-    "Thesis": 8,
-}
+import re
+
 
 EIHWAM_LABELS = {
     0: "Level 1 units",
     2: "Level 2 units",
     3: "Level 3 units",
-    4: "Level 4/5 units",
+    4: "Level 4+ units",
     8: "Thesis units",
 }
+
+THESIS_PATTERN = re.compile(r"\bthesis\b", re.IGNORECASE)
+
+
+def is_thesis_unit(unit):
+    """Identify a thesis from its supplied unit code or title."""
+    return bool(THESIS_PATTERN.search(str(unit)))
+
+
+def eihwam_weight(level, unit):
+    """Return EIHWAM weight from level, with an explicit thesis-name override."""
+    if is_thesis_unit(unit):
+        return 8
+
+    match = re.search(r"\d+", str(level))
+    if not match:
+        return 0
+
+    level_number = int(match.group())
+    if level_number <= 1:
+        return 0
+    if level_number == 2:
+        return 2
+    if level_number == 3:
+        return 3
+    return 4
 
 
 def _weighted_average(data, mark_column, weight_column="CP"):
@@ -38,9 +58,10 @@ def _projected_units(df):
 
 def _add_eihwam_weight(df):
     weighted = df.copy()
-    weighted["Weight"] = (
-        weighted["Level"].map(EIHWAM_WEIGHTS).fillna(0).astype(float)
-    )
+    weighted["Weight"] = [
+        eihwam_weight(level, unit)
+        for level, unit in zip(weighted["Level"], weighted["Unit"])
+    ]
     weighted["EIHWAM CP"] = weighted["CP"] * weighted["Weight"]
     return weighted
 
