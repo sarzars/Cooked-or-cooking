@@ -21,7 +21,6 @@ st.page_link(
     "pages/2_📚_Academic_Record.py",
     label="Add your academic record",
     icon="📚",
-    type="primary",
 )
 
 st.markdown("### A simple path to clarity")
