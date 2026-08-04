@@ -4,6 +4,8 @@ import streamlit as st
 from utils.calculations import (
     EIHWAM_LABELS,
     calculate_projection,
+    eihwam_target_scenarios,
+    eihwam_unit_impact,
     required_group_averages,
     required_overall_average,
 )
@@ -38,6 +40,28 @@ target_wam = st.number_input("Target WAM", 0.0, 100.0, 75.0, 0.5)
 target_eihwam = None
 if supports_eihwam(degree):
     target_eihwam = st.number_input("Target EIHWAM", 0.0, 100.0, 75.0, 0.5)
+
+    suggested_plans = eihwam_target_scenarios(working, target_eihwam)
+    if suggested_plans:
+        plan_name = st.selectbox(
+            "EIHWAM plan",
+            ["Custom projections", *suggested_plans.keys()],
+            help=(
+                "Generated plans use different unit-level marks while meeting "
+                "your EIHWAM target."
+            ),
+        )
+        if plan_name != "Custom projections":
+            working = suggested_plans[plan_name]
+            st.caption(
+                "This is a generated starting plan. You can fine-tune every "
+                "remaining unit below."
+            )
+    else:
+        st.info(
+            "No generated EIHWAM plan is possible for this target with the "
+            "remaining EIHWAM-weighted units."
+        )
 
 required_wam = required_overall_average(working, target_wam, metric="WAM")
 if required_wam is None:
@@ -85,9 +109,20 @@ projection = calculate_projection(
 
 metric_col, save_col = st.columns(2)
 with metric_col:
-    st.metric("Projected WAM", f"{projection['WAM']:.2f}")
+    st.metric("Projected WAM", f"{projection["WAM"]:.2f}")
     if supports_eihwam(degree):
-        st.metric("Projected EIHWAM", f"{projection['EIHWAM']:.2f}")
+        eihwam_gap = projection["EIHWAM"] - target_eihwam
+        st.metric(
+            "Projected EIHWAM",
+            f"{projection["EIHWAM"]:.2f}",
+            f"{eihwam_gap:+.2f} vs target",
+        )
+        if eihwam_gap >= 0:
+            st.success("Target EIHWAM achieved by this combination of marks.")
+        else:
+            st.warning(
+                f"This combination is {abs(eihwam_gap):.2f} below your target."
+            )
 
 with save_col:
     scenario_name = st.text_input(
@@ -100,6 +135,26 @@ with save_col:
             st.success(f"Saved “{scenario_name.strip()}”.")
         except ValueError as error:
             st.error(error)
+
+if supports_eihwam(degree):
+    impact = eihwam_unit_impact(working)
+    if not impact.empty:
+        st.divider()
+        st.subheader("Which future units move EIHWAM most?")
+        st.caption(
+            "The final column shows the projected EIHWAM increase from one "
+            "extra mark in that unit. Higher-weighted units have more leverage."
+        )
+        st.dataframe(
+            impact,
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "EIHWAM gain per +1 projected mark": st.column_config.NumberColumn(
+                    format="%.3f"
+                ),
+            },
+        )
 
 if source_name != "Current record":
     if st.button(f"Delete scenario “{source_name}”"):
